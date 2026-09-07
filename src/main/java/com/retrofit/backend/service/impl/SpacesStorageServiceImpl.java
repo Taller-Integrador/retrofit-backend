@@ -21,6 +21,9 @@ public class SpacesStorageServiceImpl implements StorageService {
 
     private final S3Client s3Client;
 
+    @Value("${aws.spaces.endpoint}")
+    private String endpoint;
+
     @Value("${aws.spaces.bucket}")
     private String bucketName;
 
@@ -50,15 +53,16 @@ public class SpacesStorageServiceImpl implements StorageService {
                     .acl(ObjectCannedACL.PUBLIC_READ)
                     .build();
 
-            // 3. Subir los bytes del archivo al Space
+            // 3. Subir los bytes del archivo al Space / Bucket
             s3Client.putObject(putObjectRequest,
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 
             // 4. Retornar la URL de internet definitiva
-            return String.format("https://%s.%s.digitaloceanspaces.com/%s", bucketName, region, uniqueFilename);
+            String cleanEndpoint = endpoint != null ? endpoint.replaceAll("/+$", "") : "";
+            return String.format("%s/%s/%s", cleanEndpoint, bucketName, uniqueFilename);
 
         } catch (IOException e) {
-            throw new RuntimeException("Error al procesar y subir el archivo a DigitalOcean Spaces", e);
+            throw new RuntimeException("Error al procesar y subir el archivo al almacenamiento S3", e);
         }
     }
 
