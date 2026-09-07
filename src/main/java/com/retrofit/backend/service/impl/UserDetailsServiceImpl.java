@@ -28,8 +28,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
                 Set<GrantedAuthority> authorities = user.getRole().getPermissions().stream()
-                                .map(permission -> new SimpleGrantedAuthority(permission.getName()))
+                                .map(permission -> (GrantedAuthority) new SimpleGrantedAuthority(permission.getName()))
                                 .collect(Collectors.toSet());
+
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()));
+                authorities.add(new SimpleGrantedAuthority(user.getRole().getName()));
 
                 return new org.springframework.security.core.userdetails.User(
                                 user.getUsername(),

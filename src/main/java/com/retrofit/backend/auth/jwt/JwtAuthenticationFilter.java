@@ -29,7 +29,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final List<String> PUBLIC_URLS = List.of(
             "/auth/login",
-            "/auth/registerAdmin",
             "/auth/refresh",
             "/public/**");
 

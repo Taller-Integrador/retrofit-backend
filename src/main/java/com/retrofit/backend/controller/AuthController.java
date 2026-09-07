@@ -15,6 +15,7 @@ import com.retrofit.backend.auth.TokenRefreshRequest;
 import com.retrofit.backend.model.RefreshToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -35,6 +36,7 @@ public class AuthController {
     private final UserDetailsService userDetailsService;
     private final RefreshTokenService refreshTokenService;
 
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SECURITY_CREATE')")
     @PostMapping("/registerAdmin")
     public ResponseEntity<UserDTO> register(@RequestBody AdminDTO request) {
         return ResponseEntity.ok(userService.registerAdmin(request));

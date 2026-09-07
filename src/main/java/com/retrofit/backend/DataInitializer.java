@@ -1,13 +1,19 @@
 package com.retrofit.backend;
 
+import com.retrofit.backend.model.Admin;
 import com.retrofit.backend.model.Permission;
 import com.retrofit.backend.model.RoleE;
+import com.retrofit.backend.repository.AdminRepository;
 import com.retrofit.backend.repository.PermissionRepository;
 import com.retrofit.backend.repository.RoleRepository;
+import com.retrofit.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Component
@@ -16,6 +22,9 @@ public class DataInitializer implements CommandLineRunner {
 
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
+    private final UserRepository userRepository;
+    private final AdminRepository adminRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
@@ -24,6 +33,9 @@ public class DataInitializer implements CommandLineRunner {
         try {
             createPermissionsAndRoles();
             System.out.println("Matriz de Seguridad cargada correctamente.");
+
+            createInitialAdminUsers();
+            System.out.println("Usuarios administradores iniciales cargados correctamente.");
         } catch (Exception e) {
             System.err.println("Error al cargar data inicial: " + e.getMessage());
             e.printStackTrace();
@@ -139,5 +151,46 @@ public class DataInitializer implements CommandLineRunner {
         role.setDescription(description);
         role.setPermissions(permissions); // Inserta o actualiza la lista de permisos en la tabla intermedia
         roleRepository.save(role);
+    }
+
+    private void createInitialAdminUsers() {
+        RoleE adminRole = roleRepository.findByName("ADMIN")
+                .orElseThrow(() -> new RuntimeException("Rol ADMIN no existe en la base de datos"));
+
+        // 1. Admin general
+        if (userRepository.findByEmail("admin@retrofit.com").isEmpty()
+                && userRepository.findByUsername("Admin@Retrofit").isEmpty()) {
+            Admin admin1 = Admin.builder()
+                    .email("admin@retrofit.com")
+                    .username("Admin@Retrofit")
+                    .password(passwordEncoder.encode("Admin2026@retrofit"))
+                    .role(adminRole)
+                    .name("Admin")
+                    .lastName("Admin")
+                    .active(true)
+                    .requirePasswordChange(false)
+                    .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                    .build();
+            adminRepository.save(admin1);
+            System.out.println("Usuario inicial 'Admin@Retrofit' creado correctamente.");
+        }
+
+        // 2. Super Admin
+        if (userRepository.findByEmail("super.admin@retrofit.com").isEmpty()
+                && userRepository.findByUsername("SuperAdmin@Retrofit").isEmpty()) {
+            Admin admin2 = Admin.builder()
+                    .email("super.admin@retrofit.com")
+                    .username("SuperAdmin@Retrofit")
+                    .password(passwordEncoder.encode("SuperAdmin2026@retrofit"))
+                    .role(adminRole)
+                    .name("Super")
+                    .lastName("Admin")
+                    .active(true)
+                    .requirePasswordChange(false)
+                    .createdAt(Timestamp.valueOf(LocalDateTime.now()))
+                    .build();
+            adminRepository.save(admin2);
+            System.out.println("Usuario inicial 'SuperAdmin@Retrofit' creado correctamente.");
+        }
     }
 }
